@@ -1,0 +1,36 @@
+# Step 7 smoke test after the finetune.py fix (pasted by the owner, 2026-10-29, Colab clock UTC)
+# Part 1: --smoke --run B --epochs 5 --batch_size 1   (T=20, 2 steps per epoch, 1 sample per epoch, 2 eval images)
+07:51:11 run=B exponent=2.0 args={'run': 'B', ..., 'epochs': 5, 'batch_size': 1, 'lr': 1e-05, 'seed': 1234, 'n_samples': 1, 'n_eval': 2, 'stage': 'all', 'smoke': True}
+07:51:11 train pairs: 800   eval pairs available: 30 (using 2)
+07:51:14 sample epochs: [1, 2, 3, 4, 5]   n_samples per epoch: 1
+07:51:14 schedule OK: {'exponent': 2.0, 'abar_first': 0.9999979734420776, 'abar_last': 0.8181514739990234, 'beta_min': 1.9999990854557836e-06, 'beta_max': 0.019899999722838402, 'T': 20}
+07:51:16 epoch 1 done: train_loss 0.88891  (0.0 min, 0.0 min since start)
+07:51:19 epoch 1 sample 1/1 saved (3 s total)
+07:51:19 epoch 1 sample PSNR 9.67 SSIM 0.271
+07:51:20 epoch 2 done: train_loss 0.59093  (0.0 min, 0.1 min since start)
+07:51:23 epoch 2 sample 1/1 saved (3 s total)
+07:51:23 epoch 2 sample PSNR 9.69 SSIM 0.224
+07:51:24 epoch 3 done: train_loss 0.55145  (0.0 min, 0.2 min since start)
+07:51:27 epoch 3 sample 1/1 saved (3 s total)
+07:51:27 epoch 3 sample PSNR 9.59 SSIM 0.165
+07:51:28 epoch 4 done: train_loss 0.72520  (0.0 min, 0.2 min since start)
+07:51:31 epoch 4 sample 1/1 saved (3 s total)
+07:51:31 epoch 4 sample PSNR 9.48 SSIM 0.124
+07:51:32 epoch 5 done: train_loss 0.44110  (0.0 min, 0.3 min since start)
+07:51:44 saved resume state at epoch 5
+07:51:47 epoch 5 sample 1/1 saved (3 s total)
+07:51:47 epoch 5 sample PSNR 9.46 SSIM 0.107
+07:51:50 final eval 2/2 done (0.0 min elapsed)
+07:51:50 FINAL  PSNR 10.435  SSIM 0.1355  over 2 images  (input vs ref: PSNR 17.465 SSIM 0.8675)
+07:51:52 ALL DONE
+# files written: eval_metrics.csv, final_eval/idx01..02_{input,output,target,traj}.png, final_gen.pth, resume.pt, run_config.json,
+#   run.log, samples/epoch_01..05/idx01_{input,output,target,traj}.png + metrics.csv, train_log.csv, train_steps.csv
+# Part 2: --smoke --run 0   (T=20, 2 eval images, no training)
+07:51:56 run=0 exponent=1.0 args={'run': '0', ..., 'train_root': None, 'n_samples': 1, 'n_eval': 2, 'stage': 'eval', 'smoke': True}
+07:51:56 train pairs: 0   eval pairs available: 30 (using 2)
+07:51:59 sample epochs: [2, 4, 6, 8, 10]   n_samples per epoch: 1
+07:51:59 schedule OK: {'exponent': 1.0, 'abar_first': 0.9999989867210388, 'abar_last': 0.9045172333717346, 'beta_min': 9.999999974752427e-07, 'beta_max': 0.009999999776482582, 'T': 20}
+07:52:02 final eval 1/2 done (0.1 min elapsed)
+07:52:05 final eval 2/2 done (0.1 min elapsed)
+07:52:06 FINAL  PSNR 10.663  SSIM 0.2236  over 2 images  (input vs ref: PSNR 17.465 SSIM 0.8675)
+07:52:06 ALL DONE

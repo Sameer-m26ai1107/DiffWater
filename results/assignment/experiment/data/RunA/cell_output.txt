@@ -1,0 +1,119 @@
+# Step 5
+
+Lines changed in the authors' schedule code (tagged '# MODIFIED'):
+
+4:or the MODIFIED schedule theta_t ** X (Run B).  Group 25, Noise Schedule Ablation.
+9:copied below with every changed line marked "# MODIFIED".  Everything else in this file is "# ADDED".
+46:X = 2.00   # exponent in theta_t ** X for the MODIFIED schedule (Run B).  Run A always uses exponent 1.
+73:# MODIFIED: copy of GaussianDiffusion.set_new_noise_schedule from DiffWater
+74:#           (model/ddpm_modules/diffusion.py).  Lines marked "# MODIFIED" are the only changes.
+86:    if EXPONENT != 1.0:                                           # MODIFIED
+87:        alphas_cumprod = alphas_cumprod ** EXPONENT               # MODIFIED  theta_t -> theta_t ** x
+89:    if EXPONENT != 1.0:                                           # MODIFIED
+90:        alphas = alphas_cumprod / alphas_cumprod_prev             # MODIFIED  per-step alpha_t implied by new product
+91:        betas = 1. - alphas                                       # MODIFIED  per-step beta_t implied by new product
+292:    D.GaussianDiffusion.set_new_noise_schedule = set_new_noise_schedule_mod      # MODIFIED (monkeypatch)
+
+before load_state_dict: tensor([0.8100, 0.2500])
+after  load_state_dict: tensor([0.9000, 0.5000])   <- the modified schedule is gone
+
+
+# Step 6
+
+07:34:04 schedule OK: {'exponent': 1.0, 'abar_first': 0.9999989867210388, 'abar_last': 4.3859781726496294e-05, 'beta_min': 9.999999974752427e-07, 'beta_max': 0.009999999776482582, 'T': 2000}
+07:34:10 batch 1: 0.35 s/step  (0.35 s/image, 2.9 img/s)  peak memory 3.3 GB
+07:34:15 batch 2: 0.62 s/step  (0.31 s/image, 3.2 img/s)  peak memory 4.6 GB
+07:34:24 batch 4: 1.14 s/step  (0.28 s/image, 3.5 img/s)  peak memory 7.4 GB
+07:34:37 batch 8: 1.66 s/step  (0.21 s/image, 4.8 img/s)  peak memory 13.3 GB
+
+
+training steps        : 2000   (10 epochs x 200 steps)  ->     53 min
+checkpoint saves      :                                  ->      5 min
+samples at 4 epochs   : 4 x 3 images x 5.2 min    ->     62 min
+final evaluation      : 30 images x 5.2 min       ->    156 min
+TOTAL per run         :    277 min = 4.6 h   (A and B in parallel sessions: same; one after the other: x2)
+Run 0 (no training)   :    156 min = 2.6 h   (30 images x 5.2 min, third session or afterwards)
+
+# Step 7 : Smoke test
+
+07:35:06 run=B exponent=2.0 args={'run': 'B', 'repo_dir': '/content/DiffWater/DiffWater', 'ckpt_prefix': '/content/drive/MyDrive/DW/LSUI/I390000_E78', 'train_root': '/content/euvp_train', 'eval_root': '/content/euvp_test', 'out_dir': '/content/smoke_out_smoke', 'epochs': 5, 'batch_size': 1, 'lr': 1e-05, 'seed': 1234, 'n_samples': 1, 'n_eval': 2, 'stage': 'all', 'benchmark': False, 'smoke': True}
+07:35:06 train pairs: 800   eval pairs available: 30 (using 2)
+Traceback (most recent call last):
+  File "/content/finetune.py", line 431, in <module>
+    main()
+    ~~~~^^
+  File "/content/finetune.py", line 318, in main
+    diffusion, cfg = build_model(args)
+                     ~~~~~~~~~~~^^^^^^
+  File "/content/finetune.py", line 161, in build_model
+    diffusion = R.Model.create_model(opt)      # loads the pretrained generator (strict), incl. original schedule buffers
+  File "/content/DiffWater/DiffWater/model/__init__.py", line 7, in create_model
+    m = M(opt)
+  File "/content/DiffWater/DiffWater/model/model.py", line 41, in __init__
+    self.load_network()
+    ~~~~~~~~~~~~~~~~~^^
+  File "/content/DiffWater/DiffWater/model/model.py", line 142, in load_network
+    network.load_state_dict(torch.load(
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+        gen_path), strict=(not self.opt['model']['finetune_norm']))
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/dist-packages/torch/nn/modules/module.py", line 2639, in load_state_dict
+    raise RuntimeError(
+    ...<3 lines>...
+    )
+RuntimeError: Error(s) in loading state_dict for GaussianDiffusion:
+	size mismatch for betas: copying a param with shape torch.Size([2000]) from checkpoint, the shape in current model is torch.Size([20]).
+	size mismatch for alphas_cumprod: copying a param with shape torch.Size([2000]) from checkpoint, the shape in current model is torch.Size([20]).
+	size mismatch for alphas_cumprod_prev: copying a param with shape torch.Size([2000]) from checkpoint, the shape in current model is torch.Size([20]).
+	size mismatch for sqrt_alphas_cumprod: copying a param with shape torch.Size([2000]) from checkpoint, the shape in current model is torch.Size([20]).
+	size mismatch for sqrt_one_minus_alphas_cumprod: copying a param with shape torch.Size([2000]) from checkpoint, the shape in current model is torch.Size([20]).
+	size mismatch for log_one_minus_alphas_cumprod: copying a param with shape torch.Size([2000]) from checkpoint, the shape in current model is torch.Size([20]).
+	size mismatch for sqrt_recip_alphas_cumprod: copying a param with shape torch.Size([2000]) from checkpoint, the shape in current model is torch.Size([20]).
+	size mismatch for sqrt_recipm1_alphas_cumprod: copying a param with shape torch.Size([2000]) from checkpoint, the shape in current model is torch.Size([20]).
+	size mismatch for posterior_variance: copying a param with shape torch.Size([2000]) from checkpoint, the shape in current model is torch.Size([20]).
+	size mismatch for posterior_log_variance_clipped: copying a param with shape torch.Size([2000]) from checkpoint, the shape in current model is torch.Size([20]).
+	size mismatch for posterior_mean_coef1: copying a param with shape torch.Size([2000]) from checkpoint, the shape in current model is torch.Size([20]).
+	size mismatch for posterior_mean_coef2: copying a param with shape torch.Size([2000]) from checkpoint, the shape in current model is torch.Size([20]).
+
+files written:
+/content/smoke_out_smoke/run.log
+07:35:12 run=0 exponent=1.0 args={'run': '0', 'repo_dir': '/content/DiffWater/DiffWater', 'ckpt_prefix': '/content/drive/MyDrive/DW/LSUI/I390000_E78', 'train_root': None, 'eval_root': '/content/euvp_test', 'out_dir': '/content/smoke0_smoke', 'epochs': 10, 'batch_size': 4, 'lr': 1e-05, 'seed': 1234, 'n_samples': 1, 'n_eval': 2, 'stage': 'eval', 'benchmark': False, 'smoke': True}
+07:35:12 train pairs: 0   eval pairs available: 30 (using 2)
+Traceback (most recent call last):
+  File "/content/finetune.py", line 431, in <module>
+    main()
+    ~~~~^^
+  File "/content/finetune.py", line 318, in main
+    diffusion, cfg = build_model(args)
+                     ~~~~~~~~~~~^^^^^^
+  File "/content/finetune.py", line 161, in build_model
+    diffusion = R.Model.create_model(opt)      # loads the pretrained generator (strict), incl. original schedule buffers
+  File "/content/DiffWater/DiffWater/model/__init__.py", line 7, in create_model
+    m = M(opt)
+  File "/content/DiffWater/DiffWater/model/model.py", line 41, in __init__
+    self.load_network()
+    ~~~~~~~~~~~~~~~~~^^
+  File "/content/DiffWater/DiffWater/model/model.py", line 142, in load_network
+    network.load_state_dict(torch.load(
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+        gen_path), strict=(not self.opt['model']['finetune_norm']))
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/dist-packages/torch/nn/modules/module.py", line 2639, in load_state_dict
+    raise RuntimeError(
+    ...<3 lines>...
+    )
+RuntimeError: Error(s) in loading state_dict for GaussianDiffusion:
+	size mismatch for betas: copying a param with shape torch.Size([2000]) from checkpoint, the shape in current model is torch.Size([20]).
+	size mismatch for alphas_cumprod: copying a param with shape torch.Size([2000]) from checkpoint, the shape in current model is torch.Size([20]).
+	size mismatch for alphas_cumprod_prev: copying a param with shape torch.Size([2000]) from checkpoint, the shape in current model is torch.Size([20]).
+	size mismatch for sqrt_alphas_cumprod: copying a param with shape torch.Size([2000]) from checkpoint, the shape in current model is torch.Size([20]).
+	size mismatch for sqrt_one_minus_alphas_cumprod: copying a param with shape torch.Size([2000]) from checkpoint, the shape in current model is torch.Size([20]).
+	size mismatch for log_one_minus_alphas_cumprod: copying a param with shape torch.Size([2000]) from checkpoint, the shape in current model is torch.Size([20]).
+	size mismatch for sqrt_recip_alphas_cumprod: copying a param with shape torch.Size([2000]) from checkpoint, the shape in current model is torch.Size([20]).
+	size mismatch for sqrt_recipm1_alphas_cumprod: copying a param with shape torch.Size([2000]) from checkpoint, the shape in current model is torch.Size([20]).
+	size mismatch for posterior_variance: copying a param with shape torch.Size([2000]) from checkpoint, the shape in current model is torch.Size([20]).
+	size mismatch for posterior_log_variance_clipped: copying a param with shape torch.Size([2000]) from checkpoint, the shape in current model is torch.Size([20]).
+	size mismatch for posterior_mean_coef1: copying a param with shape torch.Size([2000]) from checkpoint, the shape in current model is torch.Size([20]).
+	size mismatch for posterior_mean_coef2: copying a param with shape torch.Size([2000]) from checkpoint, the shape in current model is torch.Size([20]).
+
+

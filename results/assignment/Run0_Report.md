@@ -2,7 +2,7 @@
 
 Group 25 · Foundation Models and Generative AI · Noise Schedule Ablation in Diffusion Models
 
-Status: Run 0 complete (30 of 30 images). Runs A and B not started.
+Status: this report covers the **first Run 0, on the EUVP `test_samples` folder** (30 of 30 images). On 2026-10-29 the team decided to evaluate Run 0, A and B on held-out EUVP **Underwater Dark** pairs, as named in the declaration, because the composition of `test_samples` is unknown. **Run 0 is therefore being repeated on the new test set** (`finetune.py --run 0`, same sampler and per-image seeds as A and B). This report stays as a secondary result on a mixed test set. Runs A and B not started.
 
 ---
 

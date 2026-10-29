@@ -129,3 +129,43 @@ Lesson: write results to Drive as they are produced. Do not rely on a final "sav
 - Visual review of more than one Run 0 sample.
 - Decide the fine-tuning budget (steps per epoch, epochs) and sampling settings for the intermediate-epoch samples, identical for A and B.
 - Implement the modified schedule (exponent x as a named constant at the top of the fine-tuning script, `# MODIFIED` and `# ADDED` markers), per-image seeding, the CSV log (`epoch`, `train_loss`), samples at 5 equally spaced epochs, and 5-timestep trajectories.
+
+---
+
+## 14. Design decisions for Runs A and B (`finetune.py`)
+
+| Decision | Reason |
+|---|---|
+| Run A and Run B use one script. A uses exponent 1 (the schedule code path is skipped, so it is exactly the repo's schedule). B uses `X = 2.00`, a named constant at the top of the file. | Only the exponent differs, so the schedule is the only experimental variable. |
+| The repo's code is not edited. `finetune.py` imports it and replaces one method, `GaussianDiffusion.set_new_noise_schedule`, with a copy whose changed lines are marked `# MODIFIED`. Everything else in the file is `# ADDED`. | Keeps the diff against the authors' code to nine marked lines. |
+| ᾱₜ is raised to the power x, and the per-step αₜ, βₜ, the posterior variance and both posterior mean coefficients are re-derived from the new cumulative product. | Training noising and sampling must use one consistent schedule. Checked in numpy: β′ ranges from 2e-6 to 0.0199 (about 2β − β²), all coefficients are finite, ᾱ² is strictly decreasing even in float32, and SNR′/SNR = ᾱ/(1+ᾱ). |
+| **The schedule is re-applied after the checkpoint loads, then asserted.** | The schedule values are registered buffers, so they are stored inside the checkpoint's `state_dict`. Loading the pretrained weights overwrites a modified schedule with the original one. Without the re-apply, Run B would silently be Run A. |
+| Fresh Adam optimizer, learning rate 1e-5, batch size 4, no EMA, no augmentation. | The authors' `_opt.pth` would also reset the step and epoch counters. The repo's own loader applies no augmentation (`transform_augment` only stacks tensors), and the repo has no EMA code despite the config entry. The learning rate is 3x the authors' value because we run only a few thousand steps. Identical for A and B. |
+| Training pairs: EUVP Dark and Scenes `trainA/trainB` only, a seeded random subset, minus any file whose bytes match a `test_samples` file. | Matches the declaration (no ImageNet) and prevents test images leaking into training. |
+| An "epoch" is one pass over the fixed training subset. Total epochs is a multiple of 5, and samples are written at epochs `E/5, 2E/5, ..., E`. | The assignment asks for samples at 5 equally spaced epochs. |
+| Per-epoch seeds (`seed + epoch`) for data order, timesteps and noise. Per-image seeds (`seed * 1000 + k`) for sampling. | A and B see the same data order and the same starting noise per test image. Run 0 used one seed for the whole run, so Run 0's per-image noise differs from A and B. |
+| Samples at each of the 5 epochs: first 3 test images, all 2000 steps. The same sample also stores a 5-panel trajectory: x_t at t = 1999, 1499, 1000, 500 and the final x_0. | Satisfies both the samples-at-5-epochs and the 5-timestep-trajectory deliverables with one sampling pass. The epoch-E samples are reused by the final evaluation. |
+| Checkpoint (`resume.pt`) is written at the 5 sample epochs, before sampling, and every stage skips files that already exist. | A Colab disconnect costs at most two epochs, and the same command resumes the job. |
+
+---
+
+## 15. Switching the evaluation set to held-out Dark pairs (2026-10-29)
+
+The team asked for Run 0, A and B to be evaluated on EUVP Underwater Dark images, as in the declaration, instead of the `test_samples` folder.
+
+**Audit of `EUVP/Paired/<subset>/` (Kaggle copy):**
+
+| Folder | Dark | Scenes | Finding |
+|---|---|---|---|
+| `trainA` | 5550 | 2185 | degraded images |
+| `trainB` | 5550 | 2185 | references, same file names as `trainA` |
+| `validation` | 570 | 130 | **no references**: only 1 of 570 Dark names matches a `trainB` name. Some names look ImageNet-derived (`n02317335_33797.JPEG`). 10 Dark and 1 Scenes validation files are **byte-identical to training files**. |
+
+**Decision.** Hold out 30 Dark pairs from `trainA`/`trainB` as the shared test set. Training uses the remaining Dark and Scenes pairs, minus exact duplicates (MD5) and near-duplicates (64-bit dHash, Hamming distance at most 6) of any test image. The split is saved as `test_split_dark30.json` and checked by every session. A same-scene-different-frame correlation between train and test remains possible, as in EUVP's own split. It goes in the limitations.
+
+**Consequences.**
+- Run 0 must be repeated. `finetune.py --run 0` evaluates the pretrained weights with the same sampler, code and per-image seeds as A and B, which also removes the earlier seed caveat for "A minus Run 0".
+- The first Run 0 (on `test_samples`, 17.72 dB PSNR, 0.732 SSIM) is kept as a secondary result and is never mixed into the paired tables.
+- The decision rests on the declaration and the audit above, taken before any new result existed. State this in the report.
+
+**Training set actually used for Runs A and B (first session, 2026-10-29):** 800 pairs, 575 Dark and 225 Scenes (71.9% / 28.1%, the natural proportion), `train fingerprint: 6a9f33de995c`. The fingerprint is the first 12 hex digits of the MD5 of the sorted file names in `/content/euvp_train/input_256`. Every A and B session must print the same value. Data composition was not varied (proportional Dark + Scenes mix, test on held-out Dark).

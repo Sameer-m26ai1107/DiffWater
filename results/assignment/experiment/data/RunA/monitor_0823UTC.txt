@@ -1,0 +1,18 @@
+# Step 9 monitor cell output, pasted by the owner (Run A, about 08:23 UTC on 2026-10-29)
+08:03:33 epoch 1 step 200/200 loss 0.0526  (1.24 s/step)
+08:03:33 epoch 1 done: train_loss 0.05631  (4.1 min, 4.1 min since start)
+08:04:37 epoch 2 step 50/200 loss 0.0647  (1.27 s/step)
+08:05:39 epoch 2 step 100/200 loss 0.0624  (1.26 s/step)
+08:06:42 epoch 2 step 150/200 loss 0.0529  (1.26 s/step)
+08:07:45 epoch 2 step 200/200 loss 0.0498  (1.26 s/step)
+08:07:45 epoch 2 done: train_loss 0.05745  (4.2 min, 8.3 min since start)
+08:07:58 saved resume state at epoch 2
+08:12:59 epoch 2 sample 1/3 saved (302 s total)
+08:18:00 epoch 2 sample 2/3 saved (602 s total)
+08:23:00 epoch 2 sample 3/3 saved (903 s total)
+08:23:01 epoch 2 sample PSNR 14.10 SSIM 0.780
+---- train_log.csv ----
+epoch,train_loss
+1,0.05630866348367782
+2,0.0574513190739388
+# processes listed by pgrep: /bin/sh -c python -u /content/finetune.py --run A ... (pid 14869) and python3 -u /content/finetune.py --run A ... (pid 14870)
