@@ -1,11 +1,11 @@
 ---
 run: A                 # 0 | A | B
 tag: main            # main | legacy | variant tag
-status: running
+status: done
 owner:
 account:
 started: 2026-10-29 07:59 UTC
-finished:
+finished: 2026-10-30 19:42 UTC
 gpu: Tesla T4
 torch: 2.11.0+cu130
 python: 3.13.16
@@ -19,21 +19,21 @@ seed: 1234
 n_train: 800
 train_dark:
 train_scenes:
-train_fingerprint:
+train_fingerprint: 6a9f33de995c
 split_fingerprint: f8cc4714a30c
 n_eval: 30
-checkpoint:
+checkpoint: I390000_E78_gen.pth
 train_minutes:
 eval_minutes:
-total_minutes:
-final_train_loss:
-psnr_out_mean:
-psnr_out_std:
-ssim_out_mean:
-ssim_out_std:
-psnr_in_mean:
-ssim_in_mean:
-results_dir:
+total_minutes: 280.1
+final_train_loss: 0.06355
+psnr_out_mean: 14.360
+psnr_out_std: 3.020
+ssim_out_mean: 0.7701
+ssim_out_std: 0.1117
+psnr_in_mean: 20.647
+ssim_in_mean: 0.8887
+results_dir: Drive: FoundationModel-Assignment/runs/RunA ; local copy data/RunA/
 ---
 
 # Run A: fine-tune with the original schedule (exponent 1)
@@ -51,7 +51,9 @@ Anything that differs from `EXPERIMENT.md`, and which notebook cells were run. W
 In order. Include exact error text if short.
 
 ## Deviations from the protocol
-- Run A was interrupted by a Colab disconnect and **resumed from `resume.pt` at epoch 8** (2026-10-29 12:58 UTC, same account, same `finetune.py` md5, same command). Epochs 1 to 8 ran in session 1, epochs 9 and 10 and the final evaluation run in session 2. Method and settings are unchanged. Weights and Adam state were restored; per-epoch seeds are `seed + epoch`, so the data order of epochs 9 and 10 is the one an uninterrupted run would use. Run B is expected to run uninterrupted; GPU non-determinism makes bit-identical results impossible in either case.
+- Run A was interrupted by a Colab disconnect and **resumed from `resume.pt` at epoch 8** (2026-10-29 12:58 UTC, same account, same `finetune.py` md5, same command). Epochs 1 to 10 were trained in session 1 (its `run.log` lines end at 09:42:23), but `resume.pt` on Drive was the epoch-8 save, so epochs 9 and 10 were trained again in session 2, together with final-evaluation images 4 to 24. Method and settings are unchanged. Weights and Adam state were restored; per-epoch seeds are `seed + epoch`, so the data order of epochs 9 and 10 is the one an uninterrupted run would use. Run B is expected to run uninterrupted; GPU non-determinism makes bit-identical results impossible in either case.
+- **Session 3 (2026-10-30, 18:51 UTC):** the remaining final-evaluation images (25 to 30) are produced in the Google account that ran Run B, with the Run A folder (shared by the Run A account, added as a Drive shortcut named `RunA`) used directly as `--out_dir`. The script resumed from `resume.pt` at epoch 10. Same T4 class, same script md5, same DiffWater commit, same data fingerprints (preflight OK); only the account differs. Weights, seeds and the 24 images already written are unchanged. This session wrote image 25 and was then stopped by Colab (resource exhausted, owner's report); images 26 to 30 are still missing.
+- **Session 4 (2026-10-30, 19:10 UTC):** a further resume from epoch 10 in Run 0's Google account (owner's statement), again with the shared Run A folder used as `--out_dir`. It started at image 26, so image 25 from session 3 had reached Drive. Everything else as in session 3.
 
 ## Log
 Append-only. Format: `- YYYY-MM-DD HH:MM UTC [who] TYPE  text`. Types: START, PROGRESS, ISSUE, FIX, DECISION, RESULT, NOTE, DONE.
@@ -89,6 +91,37 @@ Append-only. Format: `- YYYY-MM-DD HH:MM UTC [who] TYPE  text`. Types: START, PR
 - 2026-10-29 [collator] RESULT  Step 3 output of session 2, read from the owner's as-run notebook (`RunAB_Finetune_Guide_v2.ipynb`, Step 3 cell): `underwater_dark` trainA/trainB 5550/5550 matched 5550; `underwater_scenes` 2185/2185 matched 2185; training pool 7700 pairs after removing 5 exact duplicates and 0 near-duplicates of a test image; `test split identical to the one saved on Drive`; **`split fingerprint: f8cc4714a30c`**; `wrote 800 train pairs and 30 test pairs`. Front matter `split_fingerprint` filled.
 - 2026-10-29 [collator] NOTE  The fingerprint cell below Step 3 (train counts and `train fingerprint`) has no output in the as-run notebook, so the train fingerprint of session 2 (epochs 9 and 10) was not recorded; `train_dark`, `train_scenes` and `train_fingerprint` stay blank in this file. The script and seed are the same and the draw is deterministic, but that is an argument, not an observation. Run the fingerprint cell once Run A has finished (the data is still in `/content` in that session) and paste the line.
 
+- 2026-10-29 13:08 UTC [collator] PROGRESS  Session 2, epochs 9 and 10 (source: `data/RunA/cell_output.txt`): 1.38 to 1.40 s/step (session 1 ran 1.24 to 1.27; benchmark 1.14), 4.6 min per epoch. train_loss epoch 9 0.06070, epoch 10 0.06355. `resume.pt` saved at epoch 10 at 13:08:19.
+- 2026-10-29 13:24 UTC [collator] RESULT  Epoch-10 samples: 321 s per image; mean over the 3 images PSNR 13.91, SSIM 0.771 (output vs reference). For comparison, the same 3 images gave PSNR 14.10 / SSIM 0.780 at epoch 2 and 14.16 / 0.762 at epoch 8. No Run 0 baseline for these images yet, so no reading of these numbers beyond 'they are in the same range'.
+- 2026-10-29 13:51 UTC [collator] PROGRESS  Final evaluation: images 1 to 3 reused from the epoch-10 samples (same weights, same seeds); 4/30 done at 13:29:43, 5/30 at 13:35:03, 6/30 at 13:40:24, 7/30 at 13:45:46, 8/30 at 13:51:07 (5.3 min per image). 22 images remain, estimated 117 min, so the end is near 15:49 UTC.
+- 2026-10-29 [collator] NOTE  train_loss at epochs 1, 2, 9, 10: 0.0563, 0.0575, 0.0607, 0.0636, a rise of about 0.007. Within one epoch the 50-step means range from 0.055 to 0.070 (random t), so an epoch mean has a noise of roughly 0.003 (estimate); the rise is borderline, not clearly real. Epochs 3 to 8 are in `train_log.csv` on Drive and have not been copied yet; read the whole curve before saying anything about it. The test-set metric is what decides, not the training loss.
+
+- 2026-10-29 15:16 UTC [collator] PROGRESS  Final evaluation reached image 24/30 at 15:16:40 (112.3 min elapsed), 5.3 to 5.4 min per image (source: `data/RunA/cell_output.txt`). That is the last line of the log: images 1 to 24 are done (1 to 3 reused from epoch 10), **images 25 to 30 are missing**.
+- 2026-10-29 (time not recorded) [owner] ISSUE  Colab reported the session as disconnected for inactivity while the tab was open and the cell was running. Trying to resume afterwards gave 'GPU exhausted' (owner's words; the exact message was not pasted). Run B, started later with the same launch cell, was still running at that time, so the cause is not the launch method; the collator suspects this account's GPU usage limit (this account had by then used the T4 for about 1.7 h in session 1 and 2.3 h in session 2), which is a guess.
+- 2026-10-29 [collator] NOTE  State needed to finish: `resume.pt` (epoch 10, saved 13:08:19 UTC) plus `samples/` and `final_eval/` on Drive. A resume loads epoch 10, skips epochs, finds the epoch-10 samples and final-eval images 1 to 24 already written, samples images 25 to 30 (about 32 min), then computes `eval_metrics.csv` and writes `final_gen.pth`. Estimated 40 min of T4 in total. Decision pending: D-016.
+
+- 2026-10-29 [owner] ISSUE  Tried to resume in the original account (option 1 of D-016): Colab answered 'You cannot currently connect to a GPU due to usage limits in Colab.' So the disconnect in this account was a usage limit, not (only) idleness, and the account cannot get a T4 for now (no time given). Run A stays `interrupted`; images 25 to 30 of the final evaluation are still missing.
+
+- 2026-10-30 18:51 UTC [owner] START  Session 3: Run A relaunched in the account that ran Run B, using the v3 launch cell with `RUN = "A"` (source: `data/RunA/new_cell_output.txt`). Preflight: `md5 38c97203... OK`, `commit 7db68f34... OK`, `train_fp 6a9f33de995c OK`, `split_fp f8cc4714a30c OK`. Command as in session 2 with `--out_dir .../runs/RunA` (the shortcut).
+- 2026-10-30 18:52 UTC [collator] RESULT  First lines of session 3: `run=A exponent=1.0`, `train pairs: 800`, `eval pairs available: 30`, **`resumed from epoch 10`** (18:52:00), `schedule OK: exponent 1.0, abar_last 4.386e-05, T 2000`. So `resume.pt` (epoch 10) was found through the shortcut and the schedule is the original one. Front matter `train_fingerprint` filled from this session's preflight (it equals the frozen value; sessions 1 and 2 did not record theirs).
+- 2026-10-30 [collator] NOTE  Expected from here (estimate): the epoch-10 samples are only rescored (a few seconds, the line should read PSNR 13.91 SSIM 0.771); training is skipped; images 1 to 24 already exist and are skipped silently; images 25 to 30 are sampled at about 5.3 min each, so about 32 min, ending near 19:25 UTC; `eval_metrics.csv` is then written for all 30 images and `final_gen.pth` saved.
+
+- 2026-10-30 18:52 UTC [collator] RESULT  Session 3, continued (source: `data/RunA/new_cell_output.txt`, updated 00:28 IST): `18:52:13 epoch 10 sample PSNR 13.91 SSIM 0.771` (13 s after the schedule check, equal to the value printed in session 2, so the epoch-10 files and weights were read correctly through the shortcut), then `18:57:33 final eval 25/30 done (5.3 min elapsed)`. That is the last line of the file.
+- 2026-10-30 ~18:58 UTC [owner] ISSUE  Colab stopped this session with 'resource exhausted' (owner's words; the message itself is not in the pasted file). The Run B account had only a little quota left, which this session used up (it ran about 7 minutes of sampling after setup). Run A is `interrupted` again: images 1 to 25 are done if image 25's four files reached Drive (to be checked: `final_eval/idx25_{input,output,target,traj}.png`), images 26 to 30 are missing, about 27 min of T4 at 5.3 min per image plus about 2 min to load.
+- 2026-10-30 [collator] NOTE  What this attempt proved: resuming from `resume.pt` through a shortcut into another account's shared folder works, the epoch-10 rescore matches, and the run writes new images into that folder. It does not prove the final steps (`eval_metrics.csv`, `final_gen.pth`) will write; those have not run yet.
+
+- 2026-10-30 19:10 UTC [owner] START  Session 4: relaunched with the v3 launch cell, `RUN = "A"` (source: `data/RunA/session4_cell_output.txt`, pasted in chat). Preflight `md5`, `commit`, `train_fp 6a9f33de995c`, `split_fp f8cc4714a30c` all OK. `resumed from epoch 10` at 19:11:48 (81 s after start, a slower load than session 3's 32 s), `schedule OK` exponent 1.0, `epoch 10 sample PSNR 13.91 SSIM 0.771` at 19:12:15.
+- 2026-10-30 19:28 UTC [collator] PROGRESS  Final evaluation: 26/30 at 19:17:48 (5.5 min elapsed), 27/30 at 19:23:19, 28/30 at 19:28:50 (16.6 min elapsed); 5.5 min per image, slightly slower than the 5.3 of the earlier sessions. There is no line for image 25: it was written in session 3 and is skipped. Estimate: 29/30 near 19:34, 30/30 near 19:40 UTC, then the `FINAL` line, `eval_metrics.csv`, `final_gen.pth` and `ALL DONE`.
+
+- 2026-10-30 19:42 UTC [collator] RESULT  **Run A finished** (source: `data/RunA/run.log`, `eval_metrics.csv`): final-evaluation images 29 and 30 at 19:34:21 and 19:39:51; `FINAL  PSNR 14.360  SSIM 0.7701  over 30 images  (input vs ref: PSNR 20.647 SSIM 0.8887)`, then `ALL DONE` at 19:42:35. Recomputed from `eval_metrics.csv` (30 rows, idx 1 to 30): PSNR out 14.360 ± 3.020, SSIM out 0.7701 ± 0.1117 (sample standard deviation); means equal the `FINAL` line. The input-vs-reference columns are identical in Run 0, Run A and Run B for all 30 images, so the three runs scored the same images in the same order. `run_config.json`: run A, exponent 1.0, epochs 10, batch 4, lr 1e-05, seed 1234, n_eval 30.
+- 2026-10-30 [collator] RESULT  Drive/log files received in `data/RunA/`: `run.log` (all four sessions appended), `train_log.csv` (10 epochs), `train_steps.csv` (2000 rows), `eval_metrics.csv`, `run_config.json`, `samples-20261029T194624Z-1-001.zip` (65 files, extracted to `data/RunA/samples/`: epochs 02, 04, 06, 08, 10 with 3 images each plus `metrics.csv`).
+- 2026-10-30 [collator] RESULT  train_loss per epoch (final `train_log.csv`): 0.05631, 0.05745, 0.05512, 0.05914, 0.05822, 0.06145, 0.05696, 0.06329, 0.06070, 0.06355. Samples at epochs 2, 4, 6, 8, 10, mean over the same 3 test images (PSNR / SSIM, output vs reference): 14.10 / 0.780, 14.70 / 0.800, 13.01 / 0.706, 14.16 / 0.762, 13.91 / 0.771.
+- 2026-10-30 [collator] NOTE  The full `run.log` shows what happened in session 1: epoch 9 finished at 09:37:59 (loss 0.06070), epoch 10 at 09:42:10 (loss 0.06372), and `saved resume state at epoch 10` was logged at 09:42:23; that is the last line of session 1, so it lasted 103 min (07:59:23 to 09:42:23) and no epoch-10 samples were made. Session 2 nevertheless resumed from epoch 8: the epoch-10 save never reached Drive (the runtime ended right after writing it; Drive uploads lag). Epochs 9 and 10 were therefore trained a second time. The two passes agree: epoch 9 loss 0.06070 both times, epoch 10 0.06372 vs 0.06355. This is a small reproducibility check of the resume path (same data order, restored optimizer), not an exact repeat (GPU non-determinism).
+- 2026-10-30 [collator] NOTE  `total_minutes` 280.1 is the sum of the first-to-last log timestamps of the four sessions (103.0 + 138.8 + 6.2 + 32.2); it excludes the waiting between sessions and the time before session 2's and 3's first line, and session 2's end is taken as its last logged image (15:16:40), so it is a lower bound. `train_minutes` and `eval_minutes` are left blank because the sessions mix both.
+- 2026-10-30 [collator] NOTE  To check on Drive: `runs/RunA/final_gen.pth` (about 593 MB). `ALL DONE` was logged 1 s after `FINAL`; the file goes through Drive's upload queue and could be missing if the runtime was closed straight away, as happened with the epoch-10 `resume.pt` in session 1. It is not needed for any result.
+
+- 2026-10-30 [collator] NOTE  Drive listing of `runs/RunA` (`data/RunA/Screenshot 2026-10-30 at 1.34.42 AM.png`): `final_gen.pth` 592.7 MB is present (modified 1:12 AM IST = 19:42 UTC), so the check left open above is closed. Also present: `eval_metrics.csv`, `resume.pt` 1.74 GB, `run_config.json`, `run.log`, `train_log.csv`, `train_steps.csv`, `samples/`, `final_eval/`. Ownership is mixed: `eval_metrics.csv` and `final_gen.pth` (written in session 4) are owned by the other Google account that wrote them, the rest by the Run A account. `eval_metrics.csv` is already copied locally; `final_gen.pth` exists only on Drive.
+
 ## Artifacts
 Where the files are: Drive path, zip name, `data/<RunName>/` contents.
 
@@ -97,3 +130,7 @@ Where the files are: Drive path, zip name, `data/<RunName>/` contents.
 - `data/RunA/smoke_test_after_fix.txt`: Step 7 smoke test output after the fix (Run B and Run 0 paths).
 - `data/RunA/RunA_stdout.log`: stdout of the running job (a partial copy taken during the run).
 - `data/RunA/monitor_0823UTC.txt`: monitor output after epoch 2 (loss, samples, process list).
+- `data/RunA/new_cell_output.txt`: output of session 3 (resume from epoch 10 in the Run B account). `data/RunA/cell_output.txt` holds session 2.
+- `data/RunA/session4_cell_output.txt`: session 4 output as pasted in chat (resume from epoch 10, images 26 to 28).
+- `data/RunA/` now also holds `run.log`, `train_log.csv`, `train_steps.csv`, `eval_metrics.csv`, `run_config.json`, the samples zip and the extracted `samples/` folder.
+- `data/RunA/Screenshot 2026-10-30 at 1.34.42 AM.png`: Drive listing of `runs/RunA` after the run.

@@ -63,12 +63,13 @@ These are the `frozen.*` values in the front matter above. Blank means not yet d
 | Generated samples at 5 equally spaced epochs (≥ 3 samples each) | `runs/Run{A,B}/samples/epoch_XX/` (Drive), summarised in the run files |
 | Inference trajectories at 5 timesteps (≥ 3 samples) | `idx*_traj.png` in the same folders |
 | Baseline with no fine-tuning (Run 0) | `Run0.md`, `data/Run0/` |
-| Report | to be written from `RESULTS.md` |
+| Report | `../report/Report.md` (draft of 2026-10-30; figures in `../report/figures/`, made by `../report/make_figures.py`, tables in `../report/tables.md`) |
 
 ## Status
-See the first table of `RESULTS.md` (rebuilt by `collate.py`). Current state, written by hand on 2026-10-29: all four run files exist, `Run0`, `RunA` and `RunB` are `not_started`, `Run0_legacy` is `done`.
+See the first table of `RESULTS.md` (rebuilt by `collate.py`). Current state, written by hand on 2026-10-30 about 01:30 IST: `Run0`, `RunA` and `RunB` are all `done` (30 evaluation images each); `Run0_legacy` is `done`. Next: the report.
 
 ## Open items
+- Report draft open items: Run 0 sample images for Figure 6, page/line evidence for DiffWater's pretraining data, library versions, contribution statement (listed at the top of `report/Report.md`).
 - `frozen.split_fingerprint`: filled 2026-10-29 (D-015) from the Step 3 print in Run A session 2. Still to confirm: the train fingerprint printed in session 2 (not captured, see `RunA.md`).
 - Instructor approval of the model change (UW-DiffPhys → DiffWater) and the evaluation set.
 - Evidence (page/line) from the DiffWater paper on what it was pretrained on.
